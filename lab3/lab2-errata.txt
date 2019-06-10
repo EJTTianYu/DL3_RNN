@@ -1,0 +1,4 @@
+1. 1-Convolution model - Step by Step - v1
+    详见其中“5.2.3 Putting it together: Pooling backward”，backward没有考虑stride。
+2. 4-cnn-classic-arch
+    详见其中“2.4.1 为什么要用卷积神经网络”，需要的参数个数是“28*28*15+15+15*10+10=11935”个。

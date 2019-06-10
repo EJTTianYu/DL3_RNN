@@ -1,19 +1,27 @@
 import torch
 import torch.nn as nn
 
+
 class LMModel(nn.Module):
     # Language model is composed of three parts: a word embedding layer, a rnn network and a output layer. 
     # The word embedding layer have input as a sequence of word index (in the vocabulary) and output a sequence of vector where each one is a word embedding. 
     # The rnn network has input of each word embedding and output a hidden feature corresponding to each word embedding.
     # The output layer has input as the hidden feature and output the probability of each word in the vocabulary.
-    def __init__(self, nvoc,ninput, nhid, nlayers):
+    def __init__(self, nvoc, ninput, nhid, nlayers):
         super(LMModel, self).__init__()
         self.drop = nn.Dropout(0.5)
         self.encoder = nn.Embedding(nvoc, ninput)
         # WRITE CODE HERE witnin two '#' bar
         ########################################
         # Construct you RNN model here. You can add additional parameters to the function.
-        self.rnn = None
+        # self.rnn = None
+        self.rnn = nn.LSTM(  # if use nn.RNN(), it hardly learns
+            input_size=ninput,
+            hidden_size=nhid,  # rnn hidden unit
+            num_layers=nlayers,  # number of rnn layer
+            batch_first=False,
+            # input & output will has batch size as 1s dimension. e.g. (batch, time_step, input_size)
+        )
         ########################################
         self.decoder = nn.Linear(nhid, nvoc)
         self.init_weights()
@@ -33,11 +41,12 @@ class LMModel(nn.Module):
         ########################################
         # With embeddings, you can get your output here.
         # Output has the dimension of sequence_length * batch_size * number of classes
-        output = None
-        hidden = None
+        # output = None
+        # hidden = None
+        output, hidden = self.rnn(embeddings, None)  # None represents zero initial hidden state
+        # hidden = self.out(output[:, -1, :])
         ########################################
 
         output = self.drop(output)
-        decoded = self.decoder(output.view(output.size(0)*output.size(1), output.size(2)))
+        decoded = self.decoder(output.view(output.size(0) * output.size(1), output.size(2)))
         return decoded.view(output.size(0), output.size(1), decoded.size(1)), hidden
-

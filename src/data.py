@@ -1,6 +1,7 @@
 import os
 import torch
 
+
 class Corpus(object):
     def __init__(self, path, batch_size, max_sql):
         self.vocabulary = []
@@ -8,12 +9,12 @@ class Corpus(object):
         self.train = self.tokenize(os.path.join(path, 'train.txt'))
         self.valid = self.tokenize(os.path.join(path, 'valid.txt'))
         self.dset_flag = "train"
-        
+
         ## max_sql means the maximum sequence length
         self.max_sql = max_sql
         self.batch_size = batch_size
-        print("size of train set: ",self.train.size(0))
-        print("size of valid set: ",self.valid.size(0))
+        print("size of train set: ", self.train.size(0))
+        print("size of valid set: ", self.valid.size(0))
         self.train_batch_num = self.train.size(0) // self.batch_size["train"]
         self.valid_batch_num = self.valid.size(0) // self.batch_size["valid"]
         self.train = self.train.narrow(0, 0, self.batch_size["train"] * self.train_batch_num)
@@ -52,24 +53,32 @@ class Corpus(object):
         ## train_si and valid_si indicates the index of the start point of the current mini-batch
         if self.dset_flag == "train":
             start_index = self.train_si
-            seq_len = min(self.max_sql, self.train.size(0)-self.train_si-1)
+            seq_len = min(self.max_sql, self.train.size(0) - self.train_si - 1)
             data_loader = self.train
             self.train_si = self.train_si + seq_len
         else:
             start_index = self.valid_si
-            seq_len = min(self.max_sql, self.valid.size(0)-self.valid_si-1)
+            seq_len = min(self.max_sql, self.valid.size(0) - self.valid_si - 1)
             data_loader = self.valid
             self.valid_si = self.valid_si + seq_len
-        data = data_loader[start_index:start_index+seq_len, :]
-        target = data_loader[start_index+1:start_index+seq_len+1, :].view(-1)
+        data = data_loader[start_index:start_index + seq_len, :]
+        # target = data_loader[start_index + 1:start_index + seq_len + 1, :].view(-1)
+        target = data_loader[start_index + 1:start_index + seq_len + 1, :].view(-1)
 
         ## end_flag indicates whether a epoch (train or valid epoch) has been ended
-        if self.dset_flag == "train" and self.train_si+1 == self.train.size(0):
+        if self.dset_flag == "train" and self.train_si + 1 == self.train.size(0):
             end_flag = True
             self.train_si = 0
-        elif self.dset_flag == "valid" and self.valid_si+1 == self.valid.size(0):
+        elif self.dset_flag == "valid" and self.valid_si + 1 == self.valid.size(0):
             end_flag = True
             self.valid_si = 0
         else:
             end_flag = False
         return data, target, end_flag
+
+
+if __name__ == "__main__":
+    corpus = Corpus(r"/Users/tianyu/PycharmProjects/DL3/data/ptb", {"train": 64, "valid": 64}, 30)
+    corpus.set_train()
+    # corpus.set_valid()
+    print(corpus.get_batch())
